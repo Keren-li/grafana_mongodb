@@ -22,8 +22,7 @@ methods = ('GET', 'POST')
 metric_readers = {}
 annotation_readers = {}
 panel_readers = {}
-datapoint = []
-query_data= {}
+
 def dget(dictionary, cmd, default=None):
     cmd_list = cmd.split('.')
     tmp = dict(dictionary)
@@ -70,10 +69,13 @@ def grafana_query():
     print("++++++++++++++++++++++++++++++++")
     print("headers:", request.headers, request.get_json())
     print("++++++++++++++++++++++++++++++++")
-
+    query_data = {}
+    datapoint = []
     req = request.get_json()
     from_time = datetime_timestamp(dget(req, 'range.from'))
     to_time = datetime_timestamp(dget(req, 'range.to'))
+    print('from_time', from_time)
+    print("to_time=", to_time)
     targets = req.get('targets')
     target = targets[0].get('target')
 
@@ -83,7 +85,7 @@ def grafana_query():
                                 "ts": {"$gte": datetime.datetime.fromtimestamp(from_time),
                                        "$lte":datetime.datetime.fromtimestamp(to_time)}}):
             Temp_Value=record.get('v')
-            ts = (record.get('ts').timestamp()*1000)
+            ts = ((record.get('ts').timestamp()+28800)*1000)
             temp = [Temp_Value,ts]
             datapoint.append(temp)
 
@@ -93,9 +95,10 @@ def grafana_query():
                                 "ts": {"$gte": datetime.datetime.fromtimestamp(from_time),
                                        "$lte":datetime.datetime.fromtimestamp(to_time)}}):
             Humi_Value=record.get('v')
-            ts = (record.get('ts').timestamp() * 1000)
+            ts = ((record.get('ts').timestamp()+28800) * 1000)
             temp =[Humi_Value,ts]
             datapoint.append(temp)
+
 
     query_data=[{"target":target,"datapoints":datapoint}]
     return jsonify(query_data)
